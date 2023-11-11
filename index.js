@@ -11,7 +11,7 @@ const Config = {
     jsdelivr: 0
 }
 
-const whiteList = [] // 白名单，路径里面有包含字符的才会通过，e.g. ['/username/']
+const whiteList = ['/thezheproject/'] // 白名单，路径里面有包含字符的才会通过，e.g. ['/username/']
 
 /** @type {RequestInit} */
 const PREFLIGHT_INIT = {
