@@ -3,7 +3,7 @@
 /**
  * static files (404.html, sw.js, conf.js)
  */
-const ASSET_URL = 'https://hunshcn.github.io/gh-proxy/'
+const ASSET_URL = 'https://thezheproject.github.io/zheproject-ghproxy/'
 // 前缀，如果自定义路由为example.com/gh/*，将PREFIX改为 '/gh/'，注意，少一个杠都会错！
 const PREFIX = '/'
 // 分支文件使用jsDelivr镜像的开关，0为关闭，默认关闭
@@ -13,7 +13,7 @@ const Config = {
 
 const whiteList = ['/thezheproject/'] // 白名单，路径里面有包含字符的才会通过，e.g. ['/username/']
 
-/** @type {RequestInit} */
+/** @type {ResponseInit} */
 const PREFLIGHT_INIT = {
     status: 204,
     headers: new Headers({
@@ -56,7 +56,7 @@ function newUrl(urlStr) {
 
 addEventListener('fetch', e => {
     const ret = fetchHandler(e)
-        .catch(err => makeRes('cfworker error:\n' + err.stack, 502))
+        .catch(err => makeRes('Cloudflare Workers 错误：\n' + err.stack, 502))
     e.respondWith(ret)
 })
 
@@ -87,14 +87,14 @@ async function fetchHandler(e) {
         return httpHandler(req, path)
     } else if (path.search(exp2) === 0) {
         if (Config.jsdelivr) {
-            const newUrl = path.replace('/blob/', '@').replace(/^(?:https?:\/\/)?github\.com/, 'https://cdn.jsdelivr.net/gh')
+            const newUrl = path.replace('/blob/', '@').replace(/^(?:https?:\/\/)?github\.com/, 'https://fastly.jsdelivr.net/gh')
             return Response.redirect(newUrl, 302)
         } else {
             path = path.replace('/blob/', '/raw/')
             return httpHandler(req, path)
         }
     } else if (path.search(exp4) === 0) {
-        const newUrl = path.replace(/(?<=com\/.+?\/.+?)\/(.+?\/)/, '@$1').replace(/^(?:https?:\/\/)?raw\.(?:githubusercontent|github)\.com/, 'https://cdn.jsdelivr.net/gh')
+        const newUrl = path.replace(/(?<=com\/.+?\/.+?)\/(.+?\/)/, '@$1').replace(/^(?:https?:\/\/)?raw\.(?:githubusercontent|github)\.com/, 'https://fastly.jsdelivr.net/gh')
         return Response.redirect(newUrl, 302)
     } else {
         return fetch(ASSET_URL + path)
@@ -129,7 +129,7 @@ function httpHandler(req, pathname) {
     if (!flag) {
         return new Response("blocked", {status: 403})
     }
-    if (urlStr.startsWith('github')) {
+    if (urlStr.search(/^https?:\/\//) !== 0) {
         urlStr = 'https://' + urlStr
     }
     const urlObj = newUrl(urlStr)
